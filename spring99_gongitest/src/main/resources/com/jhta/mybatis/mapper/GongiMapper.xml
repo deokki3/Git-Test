@@ -1,0 +1,67 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+  PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+  "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+ <mapper namespace="com.jhta.mybatis.mapper.GongiMapper">
+	<insert id="insert" parameterType="gongi">
+		insert into gongi
+        values(gongi_seq.nextval,#{writer},#{title},#{content},sysdate)
+	</insert>
+	<delete id ="delete" parameterType="int">
+		delete from gongi where num=#{num}
+	</delete>
+
+<sql id="search">
+	<choose>
+		<when test="field=='cort'"> <!-- 제목+타이틀의 변수를 cort 라고 줌 -->
+			where title  like '%'||#{keyword}||'%'
+			or content  like '%'||#{keyword}||'%'
+		</when>
+		<otherwise>
+		<if test="field!=null and field!=''">
+			where ${field} like '%'||#{keyword}||'%'
+		</if>
+		</otherwise>
+	
+
+		</choose>
+	</sql>
+	<!-- 전체 글의 갯수 -->
+	<select id="count" resultType="int" parameterType="hashmap">
+		select NVL(count(*),0) cnt from gongi
+		<include refid="search"/>	
+	</select>
+	<select id="list" parameterType="hashmap" resultType="gongi">
+		select * from
+		(
+     		select aa.*,rownum rnum from
+    		(
+				select * from gongi 
+				<include refid="search"/>	
+				order by num desc
+     		)aa
+	 <![CDATA[	) where rnum>=#{startRow} and rnum<=#{endRow} ]]>
+	</select>
+	<select id="detail" parameterType="int" resultType="gongi">
+		select * from gongi where num=#{num}
+	</select>
+
+	<select id="prev" parameterType="int" resultType="gongi">
+	<![CDATA[
+		select * from
+		(
+		  select * from gongi where num<#{num} order by num desc
+		) where rownum=1	
+	 ]]>	
+	</select>
+
+	<select id="next" parameterType="int" resultType="gongi">
+		<![CDATA[
+		select * from
+		(
+		  select * from gongi where num>#{num} order by num asc
+		) where rownum=1
+		]]>
+	</select>
+	
+</mapper>
